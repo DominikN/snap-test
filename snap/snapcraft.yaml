@@ -1,0 +1,69 @@
+name: husarion-chatter
+version: '0.1'
+license: Apache-2.0
+summary: The ROS 2 chatter snap
+description: |
+  The husarion-chatter snap demonstrates essential ROS 2 communication 
+  through a talker-listener setup, ideal for educational and quick 
+  development purposes. This snap deploys two nodes for real-time 
+  message passing, showcasing the foundational concept of ROS 2 inter-node communication.
+
+  For launching only the talker node, which publishes messages, enter:
+    $ husarion-chatter.talker
+
+  To start the listener node, which subscribes to the talker's messages, use:
+    $ husarion-chatter.listener
+
+grade: stable
+confinement: strict
+base: core22
+
+contact: https://github.com/dominikn/snap-test/issues
+issues: https://github.com/dominikn/snap-tes/issues
+website: https://husarion.com/
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+slots:
+  shm-slot:
+    interface: shared-memory
+    write: ['*'] # paths are relative to /dev/shm
+
+plugs:
+  shm-plug:
+    interface: shared-memory
+    shared-memory: shm-slot
+    private: false
+
+apps:
+  talker:
+    command: ros2 run demo_nodes_cpp talker
+    command-chain: [usr/bin/ros_setup.sh]
+    plugs: [network, network-bind, shm-plug]
+    slots: [shm-slot]
+    extensions: [ros2-humble-ros-base]
+
+  listener:
+    command: ros2 run demo_nodes_cpp listener
+    command-chain: [usr/bin/ros_setup.sh]
+    plugs: [network, network-bind, shm-plug]
+    slots: [shm-slot]
+    extensions: [ros2-humble-ros-base]
+
+parts:
+  husarion-chatter:
+    plugin: nil
+    stage-packages:
+      - ros-humble-demo-nodes-cpp
+
+  # copy local scripts to the snap
+  local-files:
+    plugin: dump
+    source: snap/local/
+    organize:
+      '*.sh': usr/bin/
+      '*.py': usr/bin/
+      '*.yaml': usr/share/husarion-chatter/config/
+      '*.xml': usr/share/husarion-chatter/config/
